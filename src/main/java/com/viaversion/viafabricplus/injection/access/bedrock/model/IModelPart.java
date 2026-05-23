@@ -28,8 +28,5 @@ public interface IModelPart {
     boolean viaFabricPlus$isBedrockModel();
     void viaFabricPlus$setName(String name);
     String viaFabricPlus$getName();
-    void viaFabricPlus$resetEverything();
     void viaFabricPlus$setOffset(Vector3f vec3);
-    void viaFabricPlus$setPivot(Vector3f vec3);
-    void viaFabricPlus$setAngles(Vector3f vec3);
 }

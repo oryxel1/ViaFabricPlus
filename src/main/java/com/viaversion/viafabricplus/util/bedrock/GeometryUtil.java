@@ -31,35 +31,28 @@ import net.minecraft.core.Direction;
 import org.cube.converter.model.element.Cube;
 import org.cube.converter.model.element.Parent;
 import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
-import org.cube.converter.util.element.Position3V;
 import org.cube.converter.util.element.UVMap;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector3f;
 
 import java.util.*;
 
 public final class GeometryUtil {
-    public static Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> buildModel(
-        final BedrockGeometryModel geometry) {
+    public static Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> buildModel(final BedrockGeometryModel geometry) {
         final float uvWidth = geometry.getTextureSize().getX();
         final float uvHeight = geometry.getTextureSize().getY();
 
         final Map<String, PartInfo> stringToPart = new HashMap<>();
         for (final Parent bone : geometry.getParents()) {
-            final Map<String, ModelPart> children = Maps.newHashMap();
+            final Map<String, ModelPart> children = new HashMap<>();
             final ModelPart part = new ModelPart(List.of(), children);
 
+            part.setPos(bone.getPivot().getX(), -bone.getPivot().getY() + 24, bone.getPivot().getZ());
+            part.setRotation(bone.getRotation().getX() * 0.017453292519943295f, bone.getRotation().getY() * 0.017453292519943295f, bone.getRotation().getZ() * 0.017453292519943295f);
             ((IModelPart)((Object)part)).viaFabricPlus$bedrockModelSet();
-            ((IModelPart)((Object)part)).viaFabricPlus$setName(bone.getName());
-            ((IModelPart)((Object)part)).viaFabricPlus$setAngles(new Vector3f(bone.getRotation().getX() , bone.getRotation().getY(), bone.getRotation().getZ()));
-            ((IModelPart)((Object)part)).viaFabricPlus$setPivot(new Vector3f(bone.getPivot().getX(), -bone.getPivot().getY() + 24.016F, bone.getPivot().getZ()));
 
-            // Java don't allow individual cubes to have their own rotation therefore, we have to separate each cube into ModelPart to be able to rotate.
             for (final Cube cube : bone.getCubes().values()) {
-                final Position3V pos = cube.getPosition();
-
                 final float sizeX = cube.getSize().getX(), sizeY = cube.getSize().getY(), sizeZ = cube.getSize().getZ();
-                final float inflate = cube.getInflate();
+                final float inflate = cube.getInflate() + 1.0E-3F;
 
                 final UVMap uvMap = cube.getUvMap().clone();
 
@@ -70,35 +63,24 @@ public final class GeometryUtil {
                     }
                 }
 
-                final ModelPart.Cube cuboid = new ModelPart.Cube(0, 0, pos.getX(), -(pos.getY() - 24.016F + sizeY), pos.getZ(), sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
+                final ModelPart.Cube cuboid = new ModelPart.Cube(0, 0, cube.getPosition().getX(), -(cube.getPosition().getY() - 24 + sizeY), cube.getPosition().getZ(), sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
                 correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.getInflate(), cube.isMirror());
 
                 final ModelPart cubePart = new ModelPart(List.of(cuboid), Map.of());
-                ((IModelPart)((Object)cubePart)).viaFabricPlus$setPivot(new Vector3f(cube.getPivot().getX(), -cube.getPivot().getY() + 24.016F, cube.getPivot().getZ()));
-                ((IModelPart)((Object)cubePart)).viaFabricPlus$setAngles(new Vector3f(cube.getRotation().getX(), cube.getRotation().getY(), cube.getRotation().getZ()));
+                cubePart.setPos(cube.getPivot().getX(), -cube.getPivot().getY() + 24, cube.getPivot().getZ());
+                cubePart.setRotation(cube.getRotation().getX() * 0.017453292519943295f, cube.getRotation().getY() * 0.017453292519943295f, cube.getRotation().getZ() * 0.017453292519943295f);
                 ((IModelPart)((Object)cubePart)).viaFabricPlus$bedrockModelSet();
-                ((IModelPart)((Object)cubePart)).viaFabricPlus$setName(bone.getName());
                 children.put(cube.getParent() + cube.hashCode(), cubePart);
             }
 
-            String parent = bone.getParent();
-            String name = bone.getName();
-
-            stringToPart.put(name, new PartInfo(parent, part, children));
+            stringToPart.put(bone.getName(), new PartInfo(bone.getParent(), part, children));
         }
 
-        PartInfo root = stringToPart.get("root");
-        if (root == null) {
-            final Map<String, ModelPart> rootParts = Maps.newHashMap();
-            stringToPart.put("root", root = new PartInfo("", new ModelPart(List.of(), rootParts), rootParts));
-        } else {
-            final Map<String, ModelPart> rootParts = Maps.newHashMap();
-            root = new PartInfo("", new ModelPart(List.of(), rootParts), rootParts);
-        }
+        final Map<String, ModelPart> rootParts = new HashMap<>();
 
         for (Map.Entry<String, PartInfo> entry : stringToPart.entrySet()) {
-            if (entry.getValue().parent.isBlank() && entry.getValue().part() != root.part) {
-                root.children.put(entry.getKey(), entry.getValue().part());
+            if (entry.getValue().parent.isBlank()) {
+                rootParts.put(entry.getKey(), entry.getValue().part());
                 continue;
             }
 
@@ -108,7 +90,7 @@ public final class GeometryUtil {
             }
         }
 
-        return new Model<>(root.part(), RenderTypes::itemTranslucent) {
+        return new Model<>(new ModelPart(List.of(), rootParts), RenderTypes::entityTranslucentCullItemTarget) {
             @Override
             public void setupAnim(final BedrockCustomEntityRenderer.CustomEntityState state) {
             }

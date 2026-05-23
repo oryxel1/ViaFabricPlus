@@ -24,7 +24,6 @@ package com.viaversion.viafabricplus.injection.mixin.features.bedrock.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.viaversion.viafabricplus.injection.access.bedrock.model.IModelPart;
 import net.minecraft.client.model.geom.ModelPart;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,49 +43,30 @@ public abstract class MixinModelPart implements IModelPart {
 
     @Shadow public abstract List<ModelPart> getAllParts();
 
-    @Shadow public float xScale;
-    @Shadow public float yScale;
-    @Shadow public float zScale;
+    @Shadow public float x;
+    @Shadow public float y;
+    @Shadow public float z;
 
     @Unique
     private String viaFabricPlus$name = "";
 
-    @Unique private boolean viaFabricPlus$isVBUModel;
-
-    @Unique
-    private Vector3f viaFabricPlus$pivot = new Vector3f();
+    @Unique private boolean viaFabricPlus$isBedrockModel;
 
     @Unique
     private Vector3f viaFabricPlus$offset = new Vector3f();
 
-    @Unique
-    private Vector3f viaFabricPlus$rotation = new Vector3f();
-    
-    @Unique
-    private Vector3f viaFabricPlus$defaultRotation = new Vector3f();
-
-    @Unique
-    private boolean viaFabricPlus$defaultDefined = false;
-
-    @Inject(method = "translateAndRotate", at = @At("HEAD"))
-    public void translateAndRotate(PoseStack matrices, CallbackInfo ci) {
-        matrices.translate(this.viaFabricPlus$offset.x / 16.0F, this.viaFabricPlus$offset.y / 16.0F, this.viaFabricPlus$offset.z / 16.0F);
-
-        matrices.translate(this.viaFabricPlus$pivot.x / 16.0F, this.viaFabricPlus$pivot.y / 16.0F, this.viaFabricPlus$pivot.z / 16.0F);
-        matrices.mulPose((new Quaternionf()).rotationXYZ(this.viaFabricPlus$rotation.x * 0.017453292519943295f, this.viaFabricPlus$rotation.y * 0.017453292519943295f, this.viaFabricPlus$rotation.z * 0.017453292519943295f));
-        matrices.translate(-this.viaFabricPlus$pivot.x / 16.0F, -this.viaFabricPlus$pivot.y / 16.0F, -this.viaFabricPlus$pivot.z / 16.0F);
-
-        matrices.translate(-this.viaFabricPlus$offset.x / 16.0F, -this.viaFabricPlus$offset.y / 16.0F, -this.viaFabricPlus$offset.z / 16.0F);
-    }
-
     @Inject(method = "translateAndRotate", at = @At("TAIL"))
-    public void translateAndRotateTail(PoseStack matrices, CallbackInfo ci) {
+    public void translateAndRotate(PoseStack matrices, CallbackInfo ci) {
+        if (this.viaFabricPlus$isBedrockModel) {
+            matrices.translate(-this.x / 16.0F, -this.y / 16.0F, -this.z / 16.0F);
+        }
+
         matrices.translate(this.viaFabricPlus$offset.x / 16.0F, this.viaFabricPlus$offset.y / 16.0F, this.viaFabricPlus$offset.z / 16.0F);
     }
 
     @Inject(method = "getChild", at = @At("HEAD"), cancellable = true)
     private void getChild(String name, CallbackInfoReturnable<ModelPart> cir) {
-        if (this.viaFabricPlus$isBedrockModel()) {
+        if (this.viaFabricPlus$isBedrockModel) {
             cir.setReturnValue(this.children.getOrDefault(name, new ModelPart(List.of(), Map.of())));
         }
     }
@@ -103,40 +83,16 @@ public abstract class MixinModelPart implements IModelPart {
 
     @Override
     public boolean viaFabricPlus$isBedrockModel() {
-        return this.viaFabricPlus$isVBUModel;
+        return this.viaFabricPlus$isBedrockModel;
     }
 
     @Override
     public void viaFabricPlus$bedrockModelSet() {
-        this.viaFabricPlus$isVBUModel = true;
-    }
-
-    @Override
-    public void viaFabricPlus$resetEverything() {
-        getAllParts().forEach(part -> {
-            ((IModelPart)((Object)part)).viaFabricPlus$setOffset(this.viaFabricPlus$offset);
-            ((IModelPart)((Object)part)).viaFabricPlus$setAngles(this.viaFabricPlus$defaultRotation);
-            part.xScale = part.yScale = part.zScale = 1.0F;
-        });
-    }
-
-    @Override
-    public void viaFabricPlus$setPivot(Vector3f vec3) {
-        this.viaFabricPlus$pivot = vec3;
+        this.viaFabricPlus$isBedrockModel = true;
     }
 
     @Override
     public void viaFabricPlus$setOffset(Vector3f vec3) {
         this.viaFabricPlus$offset = new Vector3f(vec3.x, -vec3.y, vec3.z);
-    }
-
-    @Override
-    public void viaFabricPlus$setAngles(Vector3f vec3) {
-        if (!this.viaFabricPlus$defaultDefined) {
-            this.viaFabricPlus$defaultRotation = new Vector3f(vec3.x, vec3.y, vec3.z);
-            this.viaFabricPlus$defaultDefined = true;
-        }
-
-        this.viaFabricPlus$rotation = new Vector3f(vec3.x, vec3.y, vec3.z);
     }
 }

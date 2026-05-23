@@ -50,7 +50,7 @@ public class BedrockCustomEntityRenderer extends EntityRenderer<@NotNull Bedrock
             poseStack.pushPose();
 
             poseStack.mulPose(Axis.YP.rotationDegrees(180 - state.yaw));
-            poseStack.scale(-1.0F, -1.0F, 1.0F);
+            poseStack.scale(-1, -1, 1);
             poseStack.translate(0.0F, -1.501F, 0.0F);
 //            this.animators.values().forEach(animator -> {
 //                try {

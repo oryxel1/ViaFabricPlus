@@ -78,7 +78,7 @@ public class BedrockCustomEntity extends Entity {
                 continue;
             }
 
-            Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> geometryModel = GeometryUtil.buildModel(geometry);
+            Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> geometryModel =  GeometryUtil.buildModel(geometry);
 
             final Identifier texture = Identifier.fromNamespaceAndPath("viabedrock",
                 model.textureValue().replace("textures/", "textures/item/entity/").toLowerCase(Locale.ROOT) + ".png");
