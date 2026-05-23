@@ -24,7 +24,6 @@ package com.viaversion.viafabricplus.features.entity.custom.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.viaversion.viafabricplus.features.entity.custom.BedrockCustomEntity;
-import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -33,24 +32,21 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
-import net.raphimc.viabedrock.api.model.entity.CustomEntity;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
 import java.util.List;
 
 public class BedrockCustomEntityRenderer extends EntityRenderer<@NotNull BedrockCustomEntity, BedrockCustomEntityRenderer.@NotNull CustomEntityState> {
-    private boolean initialized = false;
-    private final List<CachedModel> models = new ArrayList<>();
-
     public BedrockCustomEntityRenderer(final EntityRendererProvider.Context context) {
         super(context);
     }
 
     @Override
     public void submit(final CustomEntityState state, final @NotNull PoseStack poseStack, final @NotNull SubmitNodeCollector nodeCollector, final @NotNull CameraRenderState camera) {
-        for (CachedModel model : this.models) {
+        if (state.models == null) {
+            return;
+        }
+
+        for (BedrockCustomEntity.CachedModel model : state.models) {
             poseStack.pushPose();
 
             poseStack.mulPose(Axis.YP.rotationDegrees(180 - state.yaw));
@@ -68,7 +64,7 @@ public class BedrockCustomEntityRenderer extends EntityRenderer<@NotNull Bedrock
             int overlayCoords = OverlayTexture.pack(OverlayTexture.u(0), OverlayTexture.v(false));
             nodeCollector.submitModel(model.model(), state,
                 poseStack, renderType, state.lightCoords, overlayCoords,
-                ARGB.multiply(654311423, -1), null,
+                -1, null,
                 state.outlineColor, null);
 
             poseStack.popPose();
@@ -79,14 +75,7 @@ public class BedrockCustomEntityRenderer extends EntityRenderer<@NotNull Bedrock
     public void extractRenderState(@NotNull final BedrockCustomEntity entity, final CustomEntityState state, final float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
         state.yaw = entity.getYRot();
-
-        if (!initialized) {
-            for (CustomEntity.EvaluatedModel model : entity.models()) {
-
-            }
-
-            initialized = true;
-        }
+        state.models = entity.models();
     }
 
     @Override
@@ -96,8 +85,8 @@ public class BedrockCustomEntityRenderer extends EntityRenderer<@NotNull Bedrock
 
     public static class CustomEntityState extends EntityRenderState {
         private float yaw;
+        private List<BedrockCustomEntity.CachedModel> models;
     }
 
-    public record CachedModel(Model<@NotNull CustomEntityState> model, Identifier texture) {
-    }
+
 }

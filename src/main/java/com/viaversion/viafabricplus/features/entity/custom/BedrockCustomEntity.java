@@ -21,7 +21,13 @@
 
 package com.viaversion.viafabricplus.features.entity.custom;
 
+import com.viaversion.viafabricplus.features.entity.custom.renderer.BedrockCustomEntityRenderer;
+import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
+import com.viaversion.viafabricplus.util.bedrock.GeometryUtil;
+import com.viaversion.viaversion.api.connection.UserConnection;
+import net.minecraft.client.model.Model;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -30,18 +36,22 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.raphimc.viabedrock.api.model.entity.CustomEntity;
+import net.raphimc.viabedrock.protocol.storage.ResourcePackStorage;
+import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class BedrockCustomEntity extends Entity {
     private final CustomEntity bedrockEntity;
-    private final List<CustomEntity.EvaluatedModel> models;
+    private final List<CachedModel> models = new ArrayList<>();
 
     public CustomEntity entity() {
         return bedrockEntity;
     }
 
-    public List<CustomEntity.EvaluatedModel> models() {
+    public List<CachedModel> models() {
         return models;
     }
 
@@ -50,8 +60,30 @@ public class BedrockCustomEntity extends Entity {
                                final CustomEntity entity,
                                List<CustomEntity.EvaluatedModel> models) {
         super(type, level);
-        this.models = models;
         this.bedrockEntity = entity;
+
+        final UserConnection connection = ProtocolTranslator.getPlayNetworkUserConnection();
+        if (connection == null) {
+            return;
+        }
+
+        final ResourcePackStorage storage = connection.get(ResourcePackStorage.class);
+        if (storage == null) {
+            return;
+        }
+
+        for (CustomEntity.EvaluatedModel model : models) {
+            BedrockGeometryModel geometry = storage.getModels().getEntityModel(model.geometryValue());
+            if (geometry == null) {
+                continue;
+            }
+
+            Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> geometryModel = GeometryUtil.buildModel(geometry);
+
+            final Identifier texture = Identifier.fromNamespaceAndPath("viabedrock",
+                model.textureValue().replace("textures/", "textures/item/entity/").toLowerCase(Locale.ROOT) + ".png");
+            this.models.add(new CachedModel(geometryModel, texture));
+        }
     }
 
     @Override
@@ -74,5 +106,8 @@ public class BedrockCustomEntity extends Entity {
 
     @Override
     protected void addAdditionalSaveData(final @NotNull ValueOutput output) {
+    }
+
+    public record CachedModel(Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> model, Identifier texture) {
     }
 }
