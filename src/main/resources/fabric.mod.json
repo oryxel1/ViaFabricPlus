@@ -41,6 +41,9 @@
   "entrypoints": {
     "modmenu": [
       "com.viaversion.viafabricplus.util.ModMenuScreenFactory"
+    ],
+    "main": [
+      "com.viaversion.viafabricplus.ViaFabricPlusMod"
     ]
   },
   "mixins": [

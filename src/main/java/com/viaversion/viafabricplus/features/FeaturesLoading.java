@@ -74,7 +74,6 @@ public final class FeaturesLoading {
         BlockConnectionsEmulation1_12_2.init();
         Recipes1_11_2.init();
         ArmorHudEmulation1_8.init();
-        CustomEntityTypes.init();
     }
 
 }

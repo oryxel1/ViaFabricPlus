@@ -32,17 +32,17 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Mixin(ModelPart.class)
 public abstract class MixinModelPart implements IModelPart {
     @Shadow @Final private Map<String, ModelPart> children;
 
-    @Shadow public abstract Stream<ModelPart> traverse();
+    @Shadow public abstract List<ModelPart> getAllParts();
 
     @Shadow public float xScale;
     @Shadow public float yScale;
@@ -69,7 +69,7 @@ public abstract class MixinModelPart implements IModelPart {
     private boolean viaFabricPlus$defaultDefined = false;
 
     @Inject(method = "translateAndRotate", at = @At("HEAD"))
-    public void translateAndRotate(PoseStack matrices) {
+    public void translateAndRotate(PoseStack matrices, CallbackInfo ci) {
         matrices.translate(this.viaFabricPlus$offset.x / 16.0F, this.viaFabricPlus$offset.y / 16.0F, this.viaFabricPlus$offset.z / 16.0F);
 
         matrices.translate(this.viaFabricPlus$pivot.x / 16.0F, this.viaFabricPlus$pivot.y / 16.0F, this.viaFabricPlus$pivot.z / 16.0F);
@@ -80,7 +80,7 @@ public abstract class MixinModelPart implements IModelPart {
     }
 
     @Inject(method = "translateAndRotate", at = @At("TAIL"))
-    public void translateAndRotateTail(PoseStack matrices) {
+    public void translateAndRotateTail(PoseStack matrices, CallbackInfo ci) {
         matrices.translate(this.viaFabricPlus$offset.x / 16.0F, this.viaFabricPlus$offset.y / 16.0F, this.viaFabricPlus$offset.z / 16.0F);
     }
 
@@ -113,10 +113,10 @@ public abstract class MixinModelPart implements IModelPart {
 
     @Override
     public void viaFabricPlus$resetEverything() {
-        this.traverse().toList().forEach(part -> {
-            viaFabricPlus$setOffset(this.viaFabricPlus$offset);
-            viaFabricPlus$setAngles(this.viaFabricPlus$defaultRotation);
-            this.xScale = this.yScale = this.zScale = 1.0F;
+        getAllParts().forEach(part -> {
+            ((IModelPart)((Object)part)).viaFabricPlus$setOffset(this.viaFabricPlus$offset);
+            ((IModelPart)((Object)part)).viaFabricPlus$setAngles(this.viaFabricPlus$defaultRotation);
+            part.xScale = part.yScale = part.zScale = 1.0F;
         });
     }
 
