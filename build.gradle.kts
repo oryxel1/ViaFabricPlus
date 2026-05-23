@@ -53,6 +53,7 @@ dependencies {
     }
 
     jij(fabricApi.module("fabric-api-base", fabricApiVersion))
+    jij(fabricApi.module("fabric-rendering-v1", fabricApiVersion))
     jij(fabricApi.module("fabric-resource-loader-v1", fabricApiVersion))
     jij(fabricApi.module("fabric-resource-loader-v0", fabricApiVersion))
     jij(fabricApi.module("fabric-networking-api-v1", fabricApiVersion))

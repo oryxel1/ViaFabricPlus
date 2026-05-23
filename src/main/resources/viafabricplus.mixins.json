@@ -49,6 +49,7 @@
     "core.integration.event.MixinMinecraft",
     "core.integration.sync_tasks.MixinClientCommonPacketListenerImpl",
     "features.april_fools_8bit_sound.MixinSoundBuffer",
+    "features.bedrock.model.MixinModelPart",
     "features.bedrock.allow_new_line.MixinFont",
     "features.bedrock.block.MixinBambooStalkBlock",
     "features.bedrock.block.MixinBlockBehaviour_Properties",

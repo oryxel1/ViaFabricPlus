@@ -26,6 +26,7 @@ import com.viaversion.viafabricplus.ViaFabricPlusImpl;
 import com.viaversion.viafabricplus.features.block.connections.BlockConnectionsEmulation1_12_2;
 import com.viaversion.viafabricplus.features.block.shape.CollisionShapes;
 import com.viaversion.viafabricplus.features.classic.cpe_extension.CPEAdditions;
+import com.viaversion.viafabricplus.features.entity.custom.CustomEntityTypes;
 import com.viaversion.viafabricplus.features.entity.dimensions.EntityDimensionDiff;
 import com.viaversion.viafabricplus.features.entity.attribute.EnchantmentAttributesEmulation1_20_6;
 import com.viaversion.viafabricplus.features.font.FontCacheReload;
@@ -73,6 +74,7 @@ public final class FeaturesLoading {
         BlockConnectionsEmulation1_12_2.init();
         Recipes1_11_2.init();
         ArmorHudEmulation1_8.init();
+        CustomEntityTypes.init();
     }
 
 }
