@@ -49,12 +49,13 @@ public class MixinCustomEntity extends Entity {
 
     @Inject(method = "spawn", at = @At("HEAD"), cancellable = true)
     private void spawn(CallbackInfo ci) {
-        if (Minecraft.getInstance().level == null) {
-            return;
-        }
         ci.cancel();
 
         Minecraft.getInstance().submit(() -> {
+            if (Minecraft.getInstance().level == null) {
+                return;
+            }
+
             final BedrockCustomEntity entity = new BedrockCustomEntity(CustomEntityTypes.CUSTOM_ENTITY_TYPE,
                 Minecraft.getInstance().level, (CustomEntity) ((Object)this), this.models);
             entity.setId(this.javaId());

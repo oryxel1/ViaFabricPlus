@@ -60,10 +60,9 @@ public class BedrockCustomEntityRenderer extends EntityRenderer<@NotNull Bedrock
 //                }
 //            });
 
-            RenderType renderType = RenderTypes.itemTranslucent(model.texture());
-            int overlayCoords = OverlayTexture.pack(OverlayTexture.u(0), OverlayTexture.v(false));
+            RenderType renderType = model.model().renderType(model.texture());
             nodeCollector.submitModel(model.model(), state,
-                poseStack, renderType, state.lightCoords, overlayCoords,
+                poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY,
                 -1, null,
                 state.outlineColor, null);
 

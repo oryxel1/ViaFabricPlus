@@ -90,7 +90,7 @@ public final class GeometryUtil {
             }
         }
 
-        return new Model<>(new ModelPart(List.of(), rootParts), RenderTypes::entityTranslucentCullItemTarget) {
+        return new Model<>(new ModelPart(List.of(), rootParts), RenderTypes::itemCutout) {
             @Override
             public void setupAnim(final BedrockCustomEntityRenderer.CustomEntityState state) {
             }
