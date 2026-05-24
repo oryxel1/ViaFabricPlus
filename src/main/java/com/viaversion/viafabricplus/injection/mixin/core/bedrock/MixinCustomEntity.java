@@ -21,13 +21,18 @@
 
 package com.viaversion.viafabricplus.injection.mixin.core.bedrock;
 
-import com.viaversion.viafabricplus.features.entity.custom.BedrockCustomEntity;
 import com.viaversion.viafabricplus.features.entity.custom.CustomEntityTypes;
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.minecraft.Vector3d;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_21_11;
-import net.minecraft.client.Minecraft;
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
+import com.viaversion.viaversion.api.type.Types;
+import com.viaversion.viaversion.protocols.v1_21_11to26_1.packet.ClientboundPackets26_1;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.raphimc.viabedrock.api.model.entity.CustomEntity;
 import net.raphimc.viabedrock.api.model.entity.Entity;
+import net.raphimc.viabedrock.api.util.MathUtil;
+import net.raphimc.viabedrock.protocol.BedrockProtocol;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -51,19 +56,18 @@ public class MixinCustomEntity extends Entity {
     private void spawn(CallbackInfo ci) {
         ci.cancel();
 
-        Minecraft.getInstance().submit(() -> {
-            if (Minecraft.getInstance().level == null) {
-                return;
-            }
-
-            final BedrockCustomEntity entity = new BedrockCustomEntity(CustomEntityTypes.CUSTOM_ENTITY_TYPE,
-                Minecraft.getInstance().level, (CustomEntity) ((Object)this), this.models);
-            entity.setId(this.javaId());
-            entity.setPos(this.position.x(), this.position.y(), this.position.z());
-            entity.setXRot(this.rotation.x());
-            entity.setYRot(this.rotation.y());
-
-            Minecraft.getInstance().level.addEntity(entity);
-        });
+        final PacketWrapper addEntity = PacketWrapper.create(ClientboundPackets26_1.ADD_ENTITY, this.user);
+        addEntity.write(Types.VAR_INT, this.javaId); // entity id
+        addEntity.write(Types.UUID, this.javaUuid); // uuid
+        addEntity.write(Types.VAR_INT, BuiltInRegistries.ENTITY_TYPE.getId(CustomEntityTypes.CUSTOM_ENTITY_TYPE)); // type id
+        addEntity.write(Types.DOUBLE, (double) this.position.x()); // x
+        addEntity.write(Types.DOUBLE, (double) this.position.y()); // y
+        addEntity.write(Types.DOUBLE, (double) this.position.z()); // z
+        addEntity.write(Types.LOW_PRECISION_VECTOR, Vector3d.ZERO); // velocity
+        addEntity.write(Types.BYTE, MathUtil.float2Byte(this.rotation.x())); // pitch
+        addEntity.write(Types.BYTE, MathUtil.float2Byte(this.rotation.y())); // yaw
+        addEntity.write(Types.BYTE, MathUtil.float2Byte(this.rotation.z())); // head yaw
+        addEntity.write(Types.VAR_INT, 0); // data
+        addEntity.send(BedrockProtocol.class);
     }
 }

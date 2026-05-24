@@ -22,10 +22,12 @@
 package com.viaversion.viafabricplus.features.entity.custom;
 
 import com.viaversion.viafabricplus.features.entity.custom.renderer.BedrockCustomEntityRenderer;
+import com.viaversion.viafabricplus.injection.access.core.bedrock.ICustomEntity;
 import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
 import com.viaversion.viafabricplus.util.bedrock.GeometryUtil;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import net.minecraft.client.model.Model;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -36,6 +38,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.raphimc.viabedrock.api.model.entity.CustomEntity;
+import net.raphimc.viabedrock.protocol.storage.EntityTracker;
 import net.raphimc.viabedrock.protocol.storage.ResourcePackStorage;
 import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 import org.jetbrains.annotations.NotNull;
@@ -44,23 +47,19 @@ import java.util.List;
 import java.util.Locale;
 
 public class BedrockCustomEntity extends Entity {
-    private final CustomEntity bedrockEntity;
     private final List<CachedModel> models = new ArrayList<>();
 
-    public CustomEntity entity() {
-        return bedrockEntity;
+    public BedrockCustomEntity(final EntityType<?> type, final Level level) {
+        super(type, level);
     }
 
     public List<CachedModel> models() {
         return models;
     }
 
-    public BedrockCustomEntity(final EntityType<?> type,
-                               final Level level,
-                               final CustomEntity entity,
-                               List<CustomEntity.EvaluatedModel> models) {
-        super(type, level);
-        this.bedrockEntity = entity;
+    @Override
+    public void recreateFromPacket(final ClientboundAddEntityPacket packet) {
+        super.recreateFromPacket(packet);
 
         final UserConnection connection = ProtocolTranslator.getPlayNetworkUserConnection();
         if (connection == null) {
@@ -71,8 +70,16 @@ public class BedrockCustomEntity extends Entity {
         if (storage == null) {
             return;
         }
+        final EntityTracker tracker = connection.get(EntityTracker.class);
+        if (tracker == null) {
+            return;
+        }
+        final net.raphimc.viabedrock.api.model.entity.Entity entity = tracker.getEntityByJid(this.getId());
+        if (!(entity instanceof CustomEntity customEntity)) {
+            return;
+        }
 
-        for (CustomEntity.EvaluatedModel model : models) {
+        for (CustomEntity.EvaluatedModel model : ((ICustomEntity)customEntity).viaFabricPlus$models()) {
             BedrockGeometryModel geometry = storage.getModels().getEntityModel(model.geometryValue());
             if (geometry == null) {
                 continue;
@@ -81,14 +88,9 @@ public class BedrockCustomEntity extends Entity {
             Model<BedrockCustomEntityRenderer.@NotNull CustomEntityState> geometryModel =  GeometryUtil.buildModel(geometry);
 
             final Identifier texture = Identifier.fromNamespaceAndPath("viabedrock",
-                model.textureValue().replace("textures/", "textures/item/entity/").toLowerCase(Locale.ROOT) + ".png");
+                model.textureValue().replace("textures/", "textures/item/entities/").toLowerCase(Locale.ROOT) + ".png");
             this.models.add(new CachedModel(geometryModel, texture));
         }
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
     }
 
     @Override

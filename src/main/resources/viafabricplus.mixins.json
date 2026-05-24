@@ -15,6 +15,7 @@
     "compat.minecraftauth.MixinDefaultJwtParserBuilder",
     "core.MixinMain",
     "core.bedrock.MixinCustomEntity",
+    "core.access.MixinCustomEntity",
     "core.access.MixinChunkTracker",
     "core.access.MixinExtensionProtocolMetadataStorage",
     "core.access.MixinLocalSampleLogger",

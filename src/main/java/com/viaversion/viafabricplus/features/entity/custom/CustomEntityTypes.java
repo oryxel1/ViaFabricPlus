@@ -32,7 +32,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
 
 public class CustomEntityTypes {
     public static EntityType<@NotNull BedrockCustomEntity> CUSTOM_ENTITY_TYPE;
@@ -45,7 +44,7 @@ public class CustomEntityTypes {
     public static void init() {
         CUSTOM_ENTITY_TYPE = register(
             "bedrock_custom_entity",
-            EntityType.Builder.of((type, level) -> new BedrockCustomEntity(type, level, null, new ArrayList<>()), MobCategory.MISC)
+            EntityType.Builder.of(BedrockCustomEntity::new, MobCategory.MISC)
         );
 
         EntityRenderers.register(CUSTOM_ENTITY_TYPE, BedrockCustomEntityRenderer::new);
